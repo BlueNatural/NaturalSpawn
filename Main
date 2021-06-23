@@ -1,0 +1,273 @@
+package com.naturalspawn.bluenatural;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Effect;
+import org.bukkit.FireworkEffect;
+import org.bukkit.FireworkEffect.Type;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.Firework;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import net.md_5.bungee.api.ChatColor;
+
+public class Main extends JavaPlugin implements Listener {
+	public static Plugin plugin;
+	public static Server server;
+	public static String pluginName;
+	public static String pluginVersion;
+	String cslprefix = "[NaturalRespawn] ";
+	
+	@Override
+    public void onLoad()
+    {
+	    plugin = this;
+        server = plugin.getServer();
+        NLog.setPluginLogger(plugin.getLogger());
+        NLog.setServerLogger(plugin.getLogger());
+        pluginName = plugin.getDescription().getName();
+        pluginVersion = plugin.getDescription().getVersion();
+        this.saveDefaultConfig();
+    }
+	public void loadingConfiguration(){
+		String prefix = "prefix";
+		plugin.getConfig().addDefault(prefix, "&7&l[&aNatural&eSpawn&7&l]");
+		
+		String commandnotspawn = "command-not-spawn";
+		plugin.getConfig().addDefault(commandnotspawn, "back");
+		
+		String notsetspawn = "not-set-spawn";
+		plugin.getConfig().addDefault(notsetspawn, "&4Không có tọa độ để set spawn,dùng lệnh /back !!");
+		
+		String newplayer = "new-player";
+		plugin.getConfig().addDefault(newplayer, "&a%player là người chơi mới,hãy chào đón người ấy !");
+		
+		String particlespawn = "particle-spawn";
+		plugin.getConfig().addDefault(particlespawn, "ENDER_SIGNAL");
+		
+		String joinmessage = "joining-message";
+		plugin.getConfig().addDefault(joinmessage, "&a%p đã tham gia Server");
+		String quitmessage = "quiting-message";
+		plugin.getConfig().addDefault(quitmessage, "&c%p đã thoát khỏi Server");
+		
+		String joiningsound = "joining-sound";
+		plugin.getConfig().addDefault(joiningsound, "ENTITY_EXPERIENCE_ORB_PICKUP​");
+		String quitingsound = "quiting-sound";
+		plugin.getConfig().addDefault(quitingsound, "BLOCK_CHEST_CLOSE");
+		String newplayersound = "new-player-sound";
+		plugin.getConfig().addDefault(newplayersound, "ENTITY_PLAYER_LEVELUP");
+		
+		String setspawn = "set-spawn";
+		plugin.getConfig().addDefault(setspawn, "&aSet spawn complete !");
+		
+		String setcooldown = "set-cooldown";
+		plugin.getConfig().addDefault(setcooldown, "&aSet cooldown complete !");
+		
+		String reload = "reload";
+		plugin.getConfig().addDefault(reload, "&aReload Successfully !");
+		
+		String noperm = "no-perm";
+		plugin.getConfig().addDefault(noperm, "&cYou do not have permission to do that ! Do not do this again !");
+		
+		getConfig().options().copyDefaults(true);
+		saveDefaultConfig();
+			
+	}
+	PluginDescriptionFile pdf = getDescription();
+	
+	public void onEnable(){
+		ConsoleCommandSender console = getServer().getConsoleSender();
+		console.sendMessage(this.cslprefix + ChatColor.BLUE + "The plugin will start in a few seconds");
+		loadingConfiguration();
+		getServer().getPluginManager().registerEvents(this, this);
+		console.sendMessage(this.cslprefix + ChatColor.RED + "The plugin started");
+		console.sendMessage(this.cslprefix + ChatColor.YELLOW + pdf.getName() + pdf.getVersion());
+		
+	}
+	public void onDisable(){
+		
+	}
+	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+		ConsoleCommandSender console = Bukkit.getConsoleSender();
+		if (!(sender instanceof Player)) {
+			console.sendMessage(this.cslprefix + ChatColor.RED + "This command only use in game");				
+			}else{
+				Player p = (Player) sender;
+				Location loc = p.getLocation();
+				if(cmd.getName().equalsIgnoreCase("naturalspawn")){
+					if(args.length < 1){
+					if(p.hasPermission("naturalspawn.help")){
+						p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&m---------------&7&l[&aNatural&eSpawn&7&l]&7&m---------------"));
+						p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/naturalspawn &7- Xem lệnh NaturalSpawn"));
+						p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/naturalspawn setspawn &7- Set khu để spawn"));
+					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/naturalspawn delay <giây> &7- thời gian dịch chuyển chỗ spawn"));
+					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/spawn &7- dịch chuyển chỗ spawn"));
+					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/naturalspawn reload &7- reload plugin"));
+					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&bPlugin made by &eBlueNatural"));
+					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&m---------------&7&l[&aNatural&eSpawn&7&l]&7&m---------------"));
+					    return true;				
+						}else{
+							p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+									ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("no-perm")));
+							return true;
+						}
+								
+			}else if(args.length == 1 && args[0].equalsIgnoreCase("setspawn")){
+				if(p.hasPermission("naturalspawn.setspawn")){
+					Location location = p.getLocation();
+					saveLocation(location);
+					p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+							ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("set-spawn")));
+					return true;
+				}else{
+					p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+							ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("no-perm")));
+					return true;
+				}
+			}else if(args.length == 2 && args[0].equalsIgnoreCase("delay")){
+				if(p.hasPermission("naturalspawn.delay")){
+					Integer cooldown = Integer.valueOf(args[1]);
+					p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+							ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("set-cooldown")));
+					return true;
+				}else{
+					p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+							ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("no-perm")));
+					return true;	
+				}
+			}else if(args.length == 1 && args[0].equalsIgnoreCase("reload")){
+				if(p.hasPermission("naturalspawn.reload")){
+					ReloadConfig();
+					p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+							ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("")));
+					
+				}
+			}
+				}else if(cmd.getName().equalsIgnoreCase("spawn")){
+					if(p.hasPermission("naturalspawn.spawn")){
+						if(p.isOnline()){
+						Integer cooldown = Integer.getInteger("cooldown");
+						p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+								ChatColor.translateAlternateColorCodes('&', "&eVui lòng đợi trong" + cooldown + "&agiây"));
+						Bukkit.getServer().getScheduler().runTaskLater(this, new Runnable(){
+							public void run(){
+								teleportPlayer(p);
+								p.playEffect(loc, Effect.valueOf(Main.this.getConfig().getString("particle-spawn")), 4.0F);								
+				}
+						}, 20L * cooldown);
+						return true;
+					}
+					}else{
+						p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+								ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("no-perm")));
+						return true;	
+					}
+				
+	}
+			}
+	}
+			
+	
+	@EventHandler
+	public void onJoin(PlayerJoinEvent e){
+		Player p = e.getPlayer();
+		Location loc = p.getLocation();
+		if(!p.hasPlayedBefore()){
+		Firework f = (Firework) p.getWorld().spawn(loc, Firework.class);
+		FireworkMeta fm = f.getFireworkMeta();
+		fm.addEffect(FireworkEffect.builder().flicker(false)
+				.trail(true)
+				.with(Type.BALL_LARGE)
+				.withColor(Color.YELLOW)
+				.withFade(Color.GREEN)
+				.build());	
+		fm.setPower(3);
+		//TODO Set fireworks and shoot it
+			teleportPlayer(p);
+			
+					
+		}
+	}
+	
+	 
+	private void ReloadConfig() {
+		plugin.reloadConfig();
+		plugin.saveConfig();
+		//TODO Total of reloading configuration 
+		
+	}
+	public void saveLocation(Location location) {
+		// TODO Auto-generated method stub
+		plugin.getConfig().set(location + "X", location.getX());
+		plugin.getConfig().set(location + "Y", location.getY());
+		plugin.getConfig().set(location + "Z", location.getZ());
+		
+		plugin.getConfig().set(location + "Yaw", Float.floatToIntBits(location.getYaw()));
+        plugin.getConfig().set(location + "Pitch", Float.floatToIntBits(location.getPitch()));
+        
+        plugin.saveConfig();
+        
+		
+	} 
+	private void teleportPlayer(Player p) {
+		Location loc = p.getLocation();
+	 
+		Boolean isSpawnLocation = LocationSpawn();
+		
+		if(!isSpawnLocation){
+			p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+					ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("not-set-spawn")));
+			p.performCommand(Main.this.getConfig().getString(""));
+			return;
+		}
+		 Double x = plugin.getConfig().getDouble(loc + "X");
+	     Double y = plugin.getConfig().getDouble(loc + "Y");
+	     Double z = plugin.getConfig().getDouble(loc + "Z");
+	     
+	     Integer yaw = plugin.getConfig().getInt(loc + "Yaw");
+	     Integer pitch = plugin.getConfig().getInt(loc + "Pitch");
+	   						     
+	     Location spawn = new Location(p.getWorld(), x, y, z);
+	     
+	     Float nYaw = Float.intBitsToFloat(yaw);
+	     Float nPitch = Float.intBitsToFloat(pitch);
+	     
+	     spawn.setYaw(nYaw);
+	     spawn.setPitch(nPitch);
+	     
+	     p.teleport(spawn);
+	     						     
+	}
+
+	public Boolean LocationSpawn() {
+		//TODO Has location spawning can spawn if else will back the location of player		
+		Player p = Bukkit.getPlayer(getName());
+		Location l = p.getLocation();
+		Boolean hasX = plugin.getConfig().isSet(l + "X");
+		Boolean hasY = plugin.getConfig().isSet(l + "Y");
+		Boolean hasZ = plugin.getConfig().isSet(l + "Z");
+				
+		Boolean hasYaw = plugin.getConfig().isSet(l + "Yaw");
+        Boolean hasPitch = plugin.getConfig().isSet(l + "Pitch");
+        
+        if (hasX && hasY && hasZ && hasYaw && hasPitch) {
+            return true;
+        }
+		return false;
+	
+		
+	}
+	}
