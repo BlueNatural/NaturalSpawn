@@ -7,6 +7,7 @@ import org.bukkit.FireworkEffect;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,8 +17,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
-import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -37,7 +39,7 @@ public class Main extends JavaPlugin implements Listener {
 	    plugin = this;
         server = plugin.getServer();
         NLog.setPluginLogger(plugin.getLogger());
-        NLog.setServerLogger(plugin.getLogger());
+        NLog.setPluginLogger(plugin.getLogger());
         pluginName = plugin.getDescription().getName();
         pluginVersion = plugin.getDescription().getVersion();
         this.saveDefaultConfig();
@@ -46,8 +48,8 @@ public class Main extends JavaPlugin implements Listener {
 		String prefix = "prefix";
 		plugin.getConfig().addDefault(prefix, "&7&l[&aNatural&eSpawn&7&l]");
 		
-		String commandnotspawn = "command-not-spawn";
-		plugin.getConfig().addDefault(commandnotspawn, "back");
+		String cooldownteleport = "cooldown-teleport";
+		plugin.getConfig().addDefault(cooldownteleport, Integer.valueOf(2));
 		
 		String notsetspawn = "not-set-spawn";
 		plugin.getConfig().addDefault(notsetspawn, "&4Không có tọa độ để set spawn,dùng lệnh /back !!");
@@ -73,9 +75,6 @@ public class Main extends JavaPlugin implements Listener {
 		String setspawn = "set-spawn";
 		plugin.getConfig().addDefault(setspawn, "&aSet spawn complete !");
 		
-		String setcooldown = "set-cooldown";
-		plugin.getConfig().addDefault(setcooldown, "&aSet cooldown complete !");
-		
 		String reload = "reload";
 		plugin.getConfig().addDefault(reload, "&aReload Successfully !");
 		
@@ -88,6 +87,7 @@ public class Main extends JavaPlugin implements Listener {
 	}
 	PluginDescriptionFile pdf = getDescription();
 	
+	@Override
 	public void onEnable(){
 		ConsoleCommandSender console = getServer().getConsoleSender();
 		console.sendMessage(this.cslprefix + ChatColor.BLUE + "The plugin will start in a few seconds");
@@ -97,6 +97,7 @@ public class Main extends JavaPlugin implements Listener {
 		console.sendMessage(this.cslprefix + ChatColor.YELLOW + pdf.getName() + pdf.getVersion());
 		
 	}
+	@Override
 	public void onDisable(){
 		
 	}
@@ -113,7 +114,6 @@ public class Main extends JavaPlugin implements Listener {
 						p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7&m---------------&7&l[&aNatural&eSpawn&7&l]&7&m---------------"));
 						p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/naturalspawn &7- Xem lệnh NaturalSpawn"));
 						p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/naturalspawn setspawn &7- Set khu để spawn"));
-					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/naturalspawn delay <giây> &7- thời gian dịch chuyển chỗ spawn"));
 					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/spawn &7- dịch chuyển chỗ spawn"));
 					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e/naturalspawn reload &7- reload plugin"));
 					    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&bPlugin made by &eBlueNatural"));
@@ -136,17 +136,7 @@ public class Main extends JavaPlugin implements Listener {
 					p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
 							ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("no-perm")));
 					return true;
-				}
-			}else if(args.length == 2 && args[0].equalsIgnoreCase("delay")){
-				if(p.hasPermission("naturalspawn.delay")){
-					Integer cooldown = Integer.valueOf(args[1]);
-					p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
-							ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("set-cooldown")));
-					return true;
-				}else{
-					p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
-							ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("no-perm")));
-					return true;	
+			
 				}
 			}else if(args.length == 1 && args[0].equalsIgnoreCase("reload")){
 				if(p.hasPermission("naturalspawn.reload")){
@@ -159,7 +149,7 @@ public class Main extends JavaPlugin implements Listener {
 				}else if(cmd.getName().equalsIgnoreCase("spawn")){
 					if(p.hasPermission("naturalspawn.spawn")){
 						if(p.isOnline()){
-						Integer cooldown = Integer.getInteger("cooldown");
+						Integer cooldown = plugin.getConfig().getInt("cooldown-teleport");
 						p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
 								ChatColor.translateAlternateColorCodes('&', "&eVui lòng đợi trong" + cooldown + "&agiây"));
 						Bukkit.getServer().getScheduler().runTaskLater(this, new Runnable(){
@@ -178,9 +168,11 @@ public class Main extends JavaPlugin implements Listener {
 				
 	}
 			}
+		return true;
 	}
 			
 	
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e){
 		Player p = e.getPlayer();
@@ -196,12 +188,37 @@ public class Main extends JavaPlugin implements Listener {
 				.build());	
 		fm.setPower(3);
 		//TODO Set fireworks and shoot it
-			teleportPlayer(p);
+			teleportPlayer(p);		
+			p.playSound(loc, Sound.valueOf(Main.this.getConfig().getString("joining-sound")), 4F, 1F);
+			Bukkit.getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix")) +
+					ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("new-player")).replaceAll("%player", p.getDisplayName()));
+			p.playEffect(loc, Effect.valueOf(Main.this.getConfig().getString("particle-spawn")), 100);
 			
-					
+		}else{
+			Bukkit.getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+					ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("joining-message")).replaceAll("%p", p.getDisplayName()));
+			teleportPlayer(p);
+			p.playSound(loc, Sound.valueOf(Main.this.getConfig().getString("joining-sound")), 4.0F, 1.0F);
+			p.playEffect(loc, Effect.valueOf(Main.this.getConfig().getString("particle-spawn")), 100);
 		}
 	}
-	
+	@EventHandler 
+	public void onQuit(PlayerQuitEvent e){
+		Player p = e.getPlayer();
+		Location loc = p.getLocation();
+		p.playSound(loc, Sound.valueOf(Main.this.getConfig().getString("quiting-sound")), 4F, 1F);	
+		Bukkit.getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
+				ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("quiting-message")).replaceAll("%p", p.getDisplayName()));
+		
+	}
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onRespawn(PlayerRespawnEvent e){
+		Player p = e.getPlayer();
+		Location loc = p.getLocation();
+		teleportPlayer(p);
+		p.playEffect(loc, Effect.valueOf(Main.this.getConfig().getString("particle-spawn")), 50);	
+		}
 	 
 	private void ReloadConfig() {
 		plugin.reloadConfig();
@@ -211,36 +228,39 @@ public class Main extends JavaPlugin implements Listener {
 	}
 	public void saveLocation(Location location) {
 		// TODO Auto-generated method stub
-		plugin.getConfig().set(location + "X", location.getX());
-		plugin.getConfig().set(location + "Y", location.getY());
-		plugin.getConfig().set(location + "Z", location.getZ());
+		plugin.getConfig().set("X", location.getX());
+		plugin.getConfig().set("Y", location.getY());
+		plugin.getConfig().set("Z", location.getZ());
 		
-		plugin.getConfig().set(location + "Yaw", Float.floatToIntBits(location.getYaw()));
-        plugin.getConfig().set(location + "Pitch", Float.floatToIntBits(location.getPitch()));
+		plugin.getConfig().set("world", location.getWorld());
+		
+		plugin.getConfig().set("Yaw", Float.floatToIntBits(location.getYaw()));
+        plugin.getConfig().set("Pitch", Float.floatToIntBits(location.getPitch()));
         
         plugin.saveConfig();
         
 		
 	} 
 	private void teleportPlayer(Player p) {
-		Location loc = p.getLocation();
-	 
 		Boolean isSpawnLocation = LocationSpawn();
 		
 		if(!isSpawnLocation){
 			p.sendMessage(ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("prefix"))+
 					ChatColor.translateAlternateColorCodes('&', Main.this.getConfig().getString("not-set-spawn")));
-			p.performCommand(Main.this.getConfig().getString(""));
+			Location loc = p.getLocation();
+			p.teleport(loc);
 			return;
 		}
-		 Double x = plugin.getConfig().getDouble(loc + "X");
-	     Double y = plugin.getConfig().getDouble(loc + "Y");
-	     Double z = plugin.getConfig().getDouble(loc + "Z");
+		 Double x = plugin.getConfig().getDouble("X");
+	     Double y = plugin.getConfig().getDouble("Y");
+	     Double z = plugin.getConfig().getDouble("Z");
 	     
-	     Integer yaw = plugin.getConfig().getInt(loc + "Yaw");
-	     Integer pitch = plugin.getConfig().getInt(loc + "Pitch");
+	     Integer yaw = plugin.getConfig().getInt("Yaw");
+	     Integer pitch = plugin.getConfig().getInt("Pitch");
 	   						     
-	     Location spawn = new Location(p.getWorld(), x, y, z);
+	     World world = Bukkit.getWorld(plugin.getConfig().getString("world"));
+	     
+	     Location spawn = new Location(world, x, y, z);
 	     
 	     Float nYaw = Float.intBitsToFloat(yaw);
 	     Float nPitch = Float.intBitsToFloat(pitch);
@@ -253,17 +273,15 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	public Boolean LocationSpawn() {
-		//TODO Has location spawning can spawn if else will back the location of player		
-		Player p = Bukkit.getPlayer(getName());
-		Location l = p.getLocation();
-		Boolean hasX = plugin.getConfig().isSet(l + "X");
-		Boolean hasY = plugin.getConfig().isSet(l + "Y");
-		Boolean hasZ = plugin.getConfig().isSet(l + "Z");
-				
-		Boolean hasYaw = plugin.getConfig().isSet(l + "Yaw");
-        Boolean hasPitch = plugin.getConfig().isSet(l + "Pitch");
+		Boolean hasX = plugin.getConfig().isSet("X");
+		Boolean hasY = plugin.getConfig().isSet("Y");
+		Boolean hasZ = plugin.getConfig().isSet("Z");
+		Boolean hasWorld = plugin.getConfig().isSet("world");
+		
+		Boolean hasYaw = plugin.getConfig().isSet("Yaw");
+        Boolean hasPitch = plugin.getConfig().isSet("Pitch");
         
-        if (hasX && hasY && hasZ && hasYaw && hasPitch) {
+        if (hasX && hasY && hasZ && hasYaw && hasPitch && hasWorld) {
             return true;
         }
 		return false;
