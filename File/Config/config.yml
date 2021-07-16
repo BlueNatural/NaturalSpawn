@@ -1,0 +1,50 @@
+#Configuration version 1.3.6
+#Want to edit the sound,get link here: https://www.spigotmc.org/wiki/cc-sounds-list/
+#Copyright: BlueNatural
+#You can copy my coding useless I do not care about it
+
+prefix: '&e&l(&aNatural&7Spawn&e&l) '
+#Prefix of plugin
+
+sound.waiting: BLOCK_NOTE_PLING
+#Play sound when wait time to teleport
+sound.teleport: ENTITY_WITHER_HURT
+#Play sound when teleport
+sound.set-spawn: ENTITY_PLAYER_LEVELUP
+#Play sound when set spawn successfully
+sound.joining: ENTITY_EXPERIENCE_ORB_PICKUP
+#Play sound when player joins
+sound.first-join: ENTITY_PLAYER_LEVELUP
+#Play sound when a who first player join in Server
+
+title-teleport: '&d&lTELEPORTED !'
+#Send title when player performs /spawn
+
+msg.set-spawn: '&aSet spawn successfully !'
+#Send message when set spawn complete 
+msg.teleporting: '&dTeleported !'
+#Send message when teleport
+msg.waiting: '&ePlease wait in {delay} to teleport'
+#Send message when time to teleport
+#{delay} is time to teleport
+msg.joining: '&a{name} joined in the Server'
+#Send message when player join
+#{name} is name of player when join
+msg.quiting: '&c{name} quited the Server'
+#Send message when player quit
+#{name} is name of player when quit
+msg.first-join: '&a{firstjoin} is a new player first join the Server !'
+#{firstjoin} is name of player when first join
+
+active-firework: true
+#If true will active shot firework when player first join
+#If else will contrary
+
+delay-teleport: 3
+#Time player will teleport
+
+reload: '&aReload Successfully !'
+#Send message when reload plugin
+
+no-perm: '&cI am sorry because you are not allowed to do this so please contact to Admintrastor to perform command'
+#Send message when you do not have permission
