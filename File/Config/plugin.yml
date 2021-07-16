@@ -1,0 +1,26 @@
+name: NaturalSpawn
+version: 1.3.6
+main: com.naturalspawn.bluenatural.Main
+author: BlueNautral
+website: ko-fi.com/bluenatural
+
+commands:
+  naturalspawn:
+    description: show all commands of NaturalSpawn
+    usage: /<command>
+    aliases: ns
+  spawn:
+    description: teleport to spawn location
+    usage: /<command>
+    
+permissions:
+  ns.help:
+    description: have this perm can show all commands of NaturalSpawn
+  ns.setspawn:
+    description: have this perm can set a spawn location
+  ns.remove:
+    description: have this perm can remove a who player of teleporting list
+  ns.reload:
+    description: have this perm can reload plugin
+  ns.add:
+    description: have this perm can add a who player of teleporting list
