@@ -1,0 +1,13 @@
+#Punish somebody when player move
+#If you do not want to do that can set active-punishment equals true
+#If has Vault can active punishment
+#Warning: If Vault did not active so do not set vault.active equals true 
+#If you do not want to meet errors
+
+active-punishment: true
+vault.active: true
+vault.taking: 50
+vault.send-message: '&cYou was lost {money} your money'
+
+command.command: 'kick {player}'
+command.punishment-msg: '&cYou was punished by System'
