@@ -10,6 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import net.md_5.bungee.api.ChatColor;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
+import java.util.List;
 
 public class Main extends JavaPlugin{
 	public static Plugin plugin;
@@ -19,6 +20,7 @@ public class Main extends JavaPlugin{
 	public static String pluginVersion;
 	public static Economy econ;
 	public static EconomyResponse r;
+	public List<UUID> spawn = new ArrayList<>();
 	String cslprefix = "[NaturalSpawn] ";
 	@Override
     public void onLoad()
