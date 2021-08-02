@@ -44,7 +44,7 @@ public class SpawnCommand implements CommandExecutor {
 					loc.getWorld().playEffect(loc, Effect.FIREWORKS_SPARK, 10);
 					loc.getWorld().playEffect(loc, Effect.FIREWORKS_SPARK, 10);
 					p.playSound(loc, Sound.valueOf(plugin.getConfig().getString("sound.waiting")), 4.0F, 1.0F);
-                    p.setGameMode(GameMode.ADVENTURE);
+                                        plugin.spawn.add(p.getUniqueId());
 					plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable(){
 						public void run(){
 							teleportPlayer(p);
