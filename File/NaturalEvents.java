@@ -77,7 +77,7 @@ public class NaturalEvents implements Listener {
 			Player p = e.getPlayer();
 			Location loc = p.getLocation();
 			double hasmoney = plugin.econ.getBalance(p);
-			if(p.getGameMode() == GameMode.ADVENTURE){
+			if(plugin.spawn.contains(p.getUniqueId()){
 				if(Config.getPunishment().getBoolean("active-punishment")){
 					if(Config.getPunishment().getBoolean("vault.active")){
 						if(hasmoney >= Config.getPunishment().getDouble("vault.taking")){
@@ -85,14 +85,14 @@ public class NaturalEvents implements Listener {
 							if(plugin.r.transactionSuccess()){
 								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
 										ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("vault.send-message")).replace("{money}", String.valueOf(Config.getPunishment().getDouble("vault.taking"))));
-								p.setGameMode(GameMode.SURVIVAL);
+								plugin.spawn.remove(p.getUniqueId());
 								plugin.getServer().getScheduler().cancelAllTasks();
 								p.removePotionEffect(PotionEffectType.BLINDNESS);
 								p.removePotionEffect(PotionEffectType.INVISIBILITY);
 							}else{
 								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
 										ChatColor.translateAlternateColorCodes('&', "&4Error of loading taking money,please report to Admin or Owner to repair it"));
-								p.setGameMode(GameMode.SURVIVAL);
+								plugin.spawn.remove(p.getUniqueId());
 								plugin.getServer().getScheduler().cancelAllTasks();
 								p.removePotionEffect(PotionEffectType.BLINDNESS);
 								p.removePotionEffect(PotionEffectType.INVISIBILITY);
@@ -102,14 +102,14 @@ public class NaturalEvents implements Listener {
 							if(plugin.r.transactionSuccess()){
 								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
 										ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("vault.send-message")).replace("{money}", String.valueOf(Config.getPunishment().getDouble("vault.taking"))));
-								p.setGameMode(GameMode.SURVIVAL);
+								plugin.spawn.remove(p.getUniqueId());
 								plugin.getServer().getScheduler().cancelAllTasks();
 								p.removePotionEffect(PotionEffectType.BLINDNESS);
 								p.removePotionEffect(PotionEffectType.INVISIBILITY);
 							}else{
 								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
 										ChatColor.translateAlternateColorCodes('&', "&4Error of loading taking money,please report to Admin or Owner to repair it"));
-								p.setGameMode(GameMode.SURVIVAL);	
+								plugin.spawn.remove(p.getUniqueId());	
 								plugin.getServer().getScheduler().cancelAllTasks();
 								p.removePotionEffect(PotionEffectType.BLINDNESS);
 								p.removePotionEffect(PotionEffectType.INVISIBILITY);
@@ -122,7 +122,7 @@ public class NaturalEvents implements Listener {
 						plugin.getServer().dispatchCommand(p, Config.getPunishment().getString("command.command").replace("{player}", p.getName()));
 						p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
 								ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("command.punishment-msg")));
-						p.setGameMode(GameMode.ADVENTURE);
+						plugin.spawn.remove(p.getUniqueId());
 				}
 				}else{
 					return;
@@ -140,7 +140,7 @@ public class NaturalEvents implements Listener {
 		@EventHandler
 		public void onChat(AsyncPlayerChatEvent e){
 			Player p = e.getPlayer();
-			if(p.getGameMode() == GameMode.ADVENTURE){
+			if(plugin.spawn.contains(p.getUniqueId()){
 				try{
 				e.setCancelled(true);
 				e.getRecipients().remove(p);
@@ -157,7 +157,7 @@ public class NaturalEvents implements Listener {
 		@EventHandler
 		public void onChangeLevel(FoodLevelChangeEvent e){
 			Player p = (Player) e.getEntity();
-			if(p.getGameMode() == GameMode.ADVENTURE){
+			if(plugin.spawn.contains(p.getUniqueId()){
 				try{
 					e.setCancelled(true);	
 					p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
