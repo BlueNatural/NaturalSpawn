@@ -18,9 +18,7 @@ permissions:
     description: have this perm can show all commands of NaturalSpawn
   ns.setspawn:
     description: have this perm can set a spawn location
-  ns.remove:
-    description: have this perm can remove a who player of teleporting list
   ns.reload:
     description: have this perm can reload plugin
-  ns.add:
-    description: have this perm can add a who player of teleporting list
+  ns.spawn:
+    description: have this perm can teleport to location spawn
