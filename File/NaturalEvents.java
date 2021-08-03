@@ -3,9 +3,7 @@ package com.naturalspawn.bluenatural;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Firework;
@@ -28,7 +26,8 @@ public class NaturalEvents implements Listener {
 		public NaturalEvents(Main plugin) {
 	        this.plugin = plugin;
 	    }
-	    @EventHandler
+	    @SuppressWarnings("static-access")
+		@EventHandler
 	    public void onJoin(PlayerJoinEvent e){
 	    	Player p = e.getPlayer();
 	    	Location loc = p.getLocation();
@@ -56,91 +55,96 @@ public class NaturalEvents implements Listener {
 	    			teleportPlayer(p);
 	    			}
 	    		}else{
+	    			if(!plugin.spawn.contains(p.getUniqueId())){
 	    			Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix")) + ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("msg.joining")).replace("{name}", p.getDisplayName()));
 	    			pl.playSound(lo, Sound.valueOf(plugin.getConfig().getString("sound.joining")), 4F, 1F);
 	    			teleportPlayer(p);
+	    			}else{
+	    				Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix")) + ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("msg.joining")).replace("{name}", p.getDisplayName()));
+		    			pl.playSound(lo, Sound.valueOf(plugin.getConfig().getString("sound.joining")), 4F, 1F);
+		    			teleportPlayer(p);
+	    		    		double hasmoney = plugin.econ.getBalance(p);		
+	    						if(Config.getPunishment().getBoolean("active-punishment")){
+	    							if(Config.getPunishment().getBoolean("vault.active")){
+	    								if(hasmoney >= Config.getPunishment().getDouble("vault.taking")){
+	    									plugin.econ.withdrawPlayer(p, Config.getPunishment().getDouble("vault.taking"));
+	    									if(plugin.r.transactionSuccess()){
+	    										p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
+	    												ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("vault.send-message")).replace("{money}", String.valueOf(Config.getPunishment().getDouble("vault.taking"))));
+	    										plugin.spawn.remove(p.getUniqueId());
+	    										plugin.getServer().getScheduler().cancelAllTasks();
+	    										p.removePotionEffect(PotionEffectType.BLINDNESS);
+	    										p.removePotionEffect(PotionEffectType.INVISIBILITY);
+	    									}else{
+	    										p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
+	    												ChatColor.translateAlternateColorCodes('&', "&4Error of loading taking money,please report to Admin or Owner to repair it"));
+	    										plugin.spawn.remove(p.getUniqueId());
+	    										plugin.getServer().getScheduler().cancelAllTasks();
+	    										p.removePotionEffect(PotionEffectType.BLINDNESS);
+	    										p.removePotionEffect(PotionEffectType.INVISIBILITY);
+	    									}
+	    								}else if(hasmoney <= Config.getPunishment().getDouble("vault.taking")){
+	    									plugin.econ.withdrawPlayer(p, Config.getPunishment().getDouble("vault.taking"));
+	    									if(plugin.r.transactionSuccess()){
+	    										p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
+	    												ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("vault.send-message")).replace("{money}", String.valueOf(Config.getPunishment().getDouble("vault.taking"))));
+	    										plugin.spawn.remove(p.getUniqueId());
+	    										plugin.getServer().getScheduler().cancelAllTasks();
+	    										p.removePotionEffect(PotionEffectType.BLINDNESS);
+	    										p.removePotionEffect(PotionEffectType.INVISIBILITY);
+	    									}else{
+	    										p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
+	    												ChatColor.translateAlternateColorCodes('&', "&4Error of loading taking money,please report to Admin or Owner to repair it"));
+	    										plugin.spawn.remove(p.getUniqueId());	
+	    										plugin.getServer().getScheduler().cancelAllTasks();
+	    										p.removePotionEffect(PotionEffectType.BLINDNESS);
+	    										p.removePotionEffect(PotionEffectType.INVISIBILITY);
+	    									}
+	    									
+	    								}
+	    								
+	    								
+	    							}else{
+	    								plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Config.getPunishment().getString("comman.command"));
+	    								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
+	    										ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("command.punishment-msg")));
+	    								plugin.spawn.remove(p.getUniqueId());
+	    						}
+	    						}else{
+	    							return;
+	    						}
+	    		    	
+	    		    	}
+	    			}
 	    		}
 	    	}
-	    
-
-	    }
+	    	
 	    
 		@EventHandler
 	    public void onQuit(PlayerQuitEvent e){
 	    	Player p = e.getPlayer();
-	        	Bukkit.getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
+	    	if(!plugin.spawn.contains(p.getUniqueId()) || plugin.spawn.contains(p.getUniqueId())){
+	        	plugin.getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
 	        			ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("msg.quiting")).replace("{name}", p.getDisplayName()));        
 	    }
-		@SuppressWarnings("static-access")
+		}
 		@EventHandler
 		public void onMove(PlayerMoveEvent e){
 			Player p = e.getPlayer();
-			Location loc = p.getLocation();
-			double hasmoney = plugin.econ.getBalance(p);
-			if(plugin.spawn.contains(p.getUniqueId()){
-				if(Config.getPunishment().getBoolean("active-punishment")){
-					if(Config.getPunishment().getBoolean("vault.active")){
-						if(hasmoney >= Config.getPunishment().getDouble("vault.taking")){
-							plugin.econ.withdrawPlayer(p, Config.getPunishment().getDouble("vault.taking"));
-							if(plugin.r.transactionSuccess()){
-								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
-										ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("vault.send-message")).replace("{money}", String.valueOf(Config.getPunishment().getDouble("vault.taking"))));
-								plugin.spawn.remove(p.getUniqueId());
-								plugin.getServer().getScheduler().cancelAllTasks();
-								p.removePotionEffect(PotionEffectType.BLINDNESS);
-								p.removePotionEffect(PotionEffectType.INVISIBILITY);
-							}else{
-								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
-										ChatColor.translateAlternateColorCodes('&', "&4Error of loading taking money,please report to Admin or Owner to repair it"));
-								plugin.spawn.remove(p.getUniqueId());
-								plugin.getServer().getScheduler().cancelAllTasks();
-								p.removePotionEffect(PotionEffectType.BLINDNESS);
-								p.removePotionEffect(PotionEffectType.INVISIBILITY);
-							}
-						}else if(hasmoney <= Config.getPunishment().getDouble("vault.taking")){
-							plugin.econ.withdrawPlayer(p, Config.getPunishment().getDouble("vault.taking"));
-							if(plugin.r.transactionSuccess()){
-								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
-										ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("vault.send-message")).replace("{money}", String.valueOf(Config.getPunishment().getDouble("vault.taking"))));
-								plugin.spawn.remove(p.getUniqueId());
-								plugin.getServer().getScheduler().cancelAllTasks();
-								p.removePotionEffect(PotionEffectType.BLINDNESS);
-								p.removePotionEffect(PotionEffectType.INVISIBILITY);
-							}else{
-								p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
-										ChatColor.translateAlternateColorCodes('&', "&4Error of loading taking money,please report to Admin or Owner to repair it"));
-								plugin.spawn.remove(p.getUniqueId());	
-								plugin.getServer().getScheduler().cancelAllTasks();
-								p.removePotionEffect(PotionEffectType.BLINDNESS);
-								p.removePotionEffect(PotionEffectType.INVISIBILITY);
-							}
-							
-						}
-						
-						
-					}else{
-						plugin.getServer().dispatchCommand(p, Config.getPunishment().getString("command.command").replace("{player}", p.getName()));
-						p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
-								ChatColor.translateAlternateColorCodes('&', Config.getPunishment().getString("command.punishment-msg")));
-						plugin.spawn.remove(p.getUniqueId());
-				}
-				}else{
-					return;
-				}
-			}
-			if(loc.getDirection().equals(Material.AIR) || loc.getDirection().equals(loc.getBlock().getType())){
-				return;
-				
+			if(plugin.spawn.contains(p.getUniqueId())){
+				p.removePotionEffect(PotionEffectType.BLINDNESS);
+				p.removePotionEffect(PotionEffectType.INVISIBILITY);
+			    plugin.getServer().getScheduler().cancelAllTasks();
+			    plugin.spawn.remove(p.getUniqueId());
+			    p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
+			    		ChatColor.translateAlternateColorCodes('&', "&4You moved so the teleport need to stop"));
 			}
 		}
-		
-	        		
-	  
-		
+			
 		@EventHandler
 		public void onChat(AsyncPlayerChatEvent e){
 			Player p = e.getPlayer();
-			if(plugin.spawn.contains(p.getUniqueId()){
+			if(plugin.spawn.contains(p.getUniqueId())){
 				try{
 				e.setCancelled(true);
 				e.getRecipients().remove(p);
@@ -157,7 +161,7 @@ public class NaturalEvents implements Listener {
 		@EventHandler
 		public void onChangeLevel(FoodLevelChangeEvent e){
 			Player p = (Player) e.getEntity();
-			if(plugin.spawn.contains(p.getUniqueId()){
+			if(plugin.spawn.contains(p.getUniqueId())){
 				try{
 					e.setCancelled(true);	
 					p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
@@ -173,7 +177,9 @@ public class NaturalEvents implements Listener {
 		@EventHandler
 		public void onRespawn(PlayerRespawnEvent e){
 			Player p = e.getPlayer();
+			if(p.isOnline()){
 			teleportPlayer(p);
+			}
 		}
 		
 		 public void teleportPlayer(Player p) {
@@ -222,4 +228,3 @@ public class NaturalEvents implements Listener {
 		}
 				
 			}
-
