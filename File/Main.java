@@ -10,7 +10,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import net.md_5.bungee.api.ChatColor;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Main extends JavaPlugin{
 	public static Plugin plugin;
