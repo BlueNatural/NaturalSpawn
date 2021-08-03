@@ -2,7 +2,6 @@ package com.naturalspawn.bluenatural;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -30,6 +29,7 @@ public class SpawnCommand implements CommandExecutor {
 		}else{
 			Player p = (Player) sender;
 			Location loc = p.getLocation();
+			
 			Integer cooldown = plugin.getConfig().getInt("delay-teleport");
 			if(args.length < 1){
 				if(p.hasPermission("ns.spawn")){
@@ -44,7 +44,8 @@ public class SpawnCommand implements CommandExecutor {
 					loc.getWorld().playEffect(loc, Effect.FIREWORKS_SPARK, 10);
 					loc.getWorld().playEffect(loc, Effect.FIREWORKS_SPARK, 10);
 					p.playSound(loc, Sound.valueOf(plugin.getConfig().getString("sound.waiting")), 4.0F, 1.0F);
-                                        plugin.spawn.add(p.getUniqueId());
+                    plugin.spawn.add(p.getUniqueId());
+                    
 					plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable(){
 						public void run(){
 							teleportPlayer(p);
@@ -58,7 +59,7 @@ public class SpawnCommand implements CommandExecutor {
 							p.playSound(loc, Sound.valueOf(plugin.getConfig().getString("sound.teleport")), 4.0F, 1.0F);
 							p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
 									ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("msg.teleporting")));
-							p.setGameMode(GameMode.SURVIVAL);
+							plugin.spawn.remove(p.getUniqueId());
 							p.removePotionEffect(PotionEffectType.BLINDNESS);
 							p.removePotionEffect(PotionEffectType.INVISIBILITY);
 						}
@@ -73,10 +74,10 @@ public class SpawnCommand implements CommandExecutor {
 		
 	
 	public void teleportPlayer(Player p) {
-		 Location loc = p.getLocation();
 		 Boolean isSpawnLocation = LocationSpawn();
 		 if(!isSpawnLocation){
-			 p.teleport(loc);
+			 p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("prefix"))+
+					 ChatColor.translateAlternateColorCodes('&', "&cYou can not teleport because you did not set location spawn to teleport"));
 			 return;
 		 }
 		 Double x = Config.getLocation().getDouble("X");
